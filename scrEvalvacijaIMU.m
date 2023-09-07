@@ -1,5 +1,7 @@
-%f1 = phone (Pixel 4a 5G), f2 = tablet (Galaxy Tab S6).
-%Distance = 21.76m (verify once more)
+%f1 = phone (Pixel 4a 5G), f2 = phone (Galaxy A53 G).
+app = 'phyphox' % Options: "phyphox", "stock" (as by SSM meausurements).
+defaultSampling = 500 % Hz
+%Distance = 40.3cm/tile 23 tiles in one direction 
 
 %Load in the data (need to measure again because I lost them)
 accFileName_f1     = "f1_accel.csv";
@@ -8,16 +10,14 @@ accFileName_f2     = "f2_accel.csv";
 gyroFileName_f1     = "f1_gyro.csv";
 gyroFileName_f2     = "f2_gyro.csv";
 
-fs = 50;
+fs = (defaultSampling * 2) + 1;
 
-%% Import IMU signals from f1 and f2 files
-ACCDATA_f1          = readtable(accFileName_f1);
-GYRODATA_f1         = readtable(gyroFileName_f1);
+%% Import IMU signals from f1 and f2 files and convert it to our notation.
+[ACCDATA_f1, GYRODATA_f1]         = fnConvertFormats(gyroFileName_f1,accFileName_f1,app,defaultSampling);
 [acc_f1, om_f1, t_f1, t0_f1] = fnSyncAccOmMW(ACCDATA_f1, GYRODATA_f1, fs);
 
-ACCDATA_f2          = readtable(accFileName_f2);
-GYRODATA_f2         = readtable(gyroFileName_f2);
-[acc_f2, om_f2, t_f2, t0_f2] = fnSyncAccOmMW(ACCDATA_f2, GYRODATA_f2, fs);
+[ACCDATA_f2, GYRODATA_f2]         = fnConvertFormats(gyroFileName_f2,accFileName_f2,app,defaultSampling);
+[acc_f2, om_f2, t_f2, t0_f2] = fnSyncAccOmMW(ACCDATA_f1, GYRODATA_f1, fs);
 
 %% Create subplots
 % Create subplots for f1
@@ -123,7 +123,7 @@ sgtitle('Tablet (f2) - Accelerometer and Gyroscope');
 [omFin_f2, accFin_f2, OMFIN_f2, ACCFIN_f2, f_f2] = computeAndDisplayValues(acc_f2, om_f2, fs);
 
 %% filtriranje
-fco = 1000;
+fco = 2000;
 
 [omFilt_f1,accFilt_f1] = filterData(accFin_f1,omFin_f1,fs,fco);
 [omFilt_f2,accFilt_f2] = filterData(accFin_f2,omFin_f2,fs,fco);
