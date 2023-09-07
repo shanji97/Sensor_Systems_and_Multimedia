@@ -1,9 +1,9 @@
 %f1 = phone (Pixel 4a 5G), f2 = phone (Galaxy A53 G).
-app = 'phyphox' % Options: "phyphox", "stock" (as by SSM meausurements).
-defaultSampling = 500 % Hz
-%Distance = 40.3cm/tile 23 tiles in one direction 
-
-%Load in the data (need to measure again because I lost them)
+app = 'phyphox'; % Options: "phyphox", "stock" (as by SSM meausurements).
+defaultSampling = 500; % Hz
+lambda = 0.9
+%Distance = 40.3cm/tile 23 tiles in one direction (one path 46 tiles  ~
+%18.538m
 accFileName_f1     = "f1_accel.csv";
 accFileName_f2     = "f2_accel.csv";
 
@@ -17,7 +17,7 @@ fs = (defaultSampling * 2) + 1;
 [acc_f1, om_f1, t_f1, t0_f1] = fnSyncAccOmMW(ACCDATA_f1, GYRODATA_f1, fs);
 
 [ACCDATA_f2, GYRODATA_f2]         = fnConvertFormats(gyroFileName_f2,accFileName_f2,app,defaultSampling);
-[acc_f2, om_f2, t_f2, t0_f2] = fnSyncAccOmMW(ACCDATA_f1, GYRODATA_f1, fs);
+[acc_f2, om_f2, t_f2, t0_f2] = fnSyncAccOmMW(ACCDATA_f2, GYRODATA_f2, fs);
 
 %% Create subplots
 % Create subplots for f1
@@ -75,21 +75,21 @@ figure;
 % Accelerometer for f2
 subplot(3, 2, 1);
 plot(t_f2 - t0_f2, acc_f2(:, 1), 'b', 'LineWidth', 2);
-title('Accelerometer X (Tablet)');
+title('Accelerometer X (Phone2)');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
 subplot(3, 2, 3);
 plot(t_f2 - t0_f2, acc_f2(:, 2), 'g', 'LineWidth', 2);
-title('Accelerometer Y (Tablet)');
+title('Accelerometer Y (Phone2)');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
 subplot(3, 2, 5);
 plot(t_f2 - t0_f2, acc_f2(:, 3), 'r', 'LineWidth', 2);
-title('Accelerometer Z (Tablet)');
+title('Accelerometer Z (Phone2)');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
@@ -97,14 +97,14 @@ grid on;
 % Gyroscope for f2
 subplot(3, 2, 2);
 plot(t_f2 - t0_f2, om_f2(:, 1), 'b', 'LineWidth', 2);
-title('Gyroscope X (Tablet)');
+title('Gyroscope X (Phone2)');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
 subplot(3, 2, 4);
 plot(t_f2 - t0_f2, om_f2(:, 2), 'g', 'LineWidth', 2);
-title('Gyroscope Y (Tablet)');
+title('Gyroscope Y (Phone2)');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
@@ -116,48 +116,82 @@ xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
-sgtitle('Tablet (f2) - Accelerometer and Gyroscope');
+sgtitle('Phone2 (f2) - Accelerometer and Gyroscope');
 
 %% Compute FIN signals
-[omFin_f1, accFin_f1, OMFIN_f1, ACCFIN_f1, f_f1] = computeAndDisplayValues(acc_f1, om_f1, fs);
-[omFin_f2, accFin_f2, OMFIN_f2, ACCFIN_f2, f_f2] = computeAndDisplayValues(acc_f2, om_f2, fs);
+[omFin_f1, accFin_f1, OMFIN_f1, ACCFIN_f1, f_f1] = fnComputeAndDisplayValues(acc_f1, om_f1, fs);
+[omFin_f2, accFin_f2, OMFIN_f2, ACCFIN_f2, f_f2] = fnComputeAndDisplayValues(acc_f2, om_f2, fs);
 
-%% filtriranje
-fco = 2000;
+%% Filtering
+fco = 500;
 
-[omFilt_f1,accFilt_f1] = filterData(accFin_f1,omFin_f1,fs,fco);
-[omFilt_f2,accFilt_f2] = filterData(accFin_f2,omFin_f2,fs,fco);
+[omFilt_f1,accFilt_f1] = fnFilterData(accFin_f1,omFin_f1,fs,fco);
+[omFilt_f2,accFilt_f2] = fnFilterData(accFin_f2,omFin_f2,fs,fco);
 
-%% izracun rotacije
+%% Rotation calculation
 g0_f1 = mean(accFin_f1(12:70,:));
 g0_f2 = mean(accFin_f1(12:70,:));
 
-%% izracun rotacije vektorja g
+%% Vector g calculation
 
 g_f1 =  g0_f1/norm(g0_f1); 
 g_f2 =  g0_f2/norm(g0_f2);
 
-%% rotacija za minus kot v referencnem sistemu
+%% Rotation for the minus angle in the reference system
 
 [v_f1, deltaT_f1, phi_f1, R_f1, g_f1] = calculateValues(omFin_f1, t_f1, g_f1);
 [v_f2, deltaT_f2, phi_f2, R_f2, g_f2] = calculateValues(omFin_f2, t_f2, g_f2);
 
 %% Display and IMU calculations
 
-acc_lin_f1 = accFromIMU(om_f1,acc_f1);
-acc_lin_f2 = accFromIMU(om_f2,acc_f2);
-%%deltaN = ;
-
-%% izracun pospeskov iz IMU
-
+[acc_lin_f1,om_corrected_f1] = fnAccFromIMU(om_f1,acc_f1,f_f1,ACCDATA_f1);
+[acc_lin_f2, om_corrected_f2] = fnAccFromIMU(om_f2,acc_f2,f_f2,ACCDATA_f2);
 
 %% izracun pospeskov v globalnem koordinatnem sistemu
-%% podobna for zanka
-
+global_acc_f1 = accFin_1 - g_f1;
+global_acc_f2 = accFin_2 - g_f2;
 %% izracun hitrosti v globalnem koordinatnem sistemu
+velocity_f1 = cumsum(global_acc_f1) * deltaT_f1; % Speed for f1
+velocity_f2 = cumsum(global_acc_f2) * deltaT_f2; % Speed for f2
 
 %% izracun poti v globalnem koordinatnem sistemu
-
+position_f1 = cumsum(velocity_f1) * deltaT_f1; % Position for f1
+position_f2 = cumsum(velocity_f2) * deltaT_f2; % Position for f2
 %% uporaba komplementarnega filtra
+g_comp_f1 = fnGComplimentaryFilter(acc_lin_f1,om_corrected_f1,g0_f1,1/defaultSampling,lambda)
+g_comp_f2 = fnGComplimentaryFilter(acc_lin_f2,om_corrected_f2,g0_f2,1/defaultSampling,lambda)
+
+
+% Plot the orientation estimates for f1 dataset
+figure;
+subplot(2, 1, 1); % Create a subplot for f1
+plot(time_f1, g_comp_f1(:, 1), 'r', 'LineWidth', 2); % Plot roll (or the first orientation component)
+hold on;
+plot(time_f1, g_comp_f1(:, 2), 'g', 'LineWidth', 2); % Plot pitch (or the second orientation component)
+plot(time_f1, g_comp_f1(:, 3), 'b', 'LineWidth', 2); % Plot yaw (or the third orientation component)
+title('Orientation Estimates for f1 Dataset');
+xlabel('Time (s)');
+ylabel('Orientation');
+legend('Roll', 'Pitch', 'Yaw');
+grid on;
+
+% Plot the orientation estimates for f2 dataset
+subplot(2, 1, 2); % Create a subplot for f2
+plot(time_f2, g_comp_f2(:, 1), 'r', 'LineWidth', 2); % Plot roll (or the first orientation component)
+hold on;
+plot(time_f2, g_comp_f2(:, 2), 'g', 'LineWidth', 2); % Plot pitch (or the second orientation component)
+plot(time_f2, g_comp_f2(:, 3), 'b', 'LineWidth', 2); % Plot yaw (or the third orientation component)
+title('Orientation Estimates for f2 Dataset');
+xlabel('Time (s)');
+ylabel('Orientation');
+legend('Roll', 'Pitch', 'Yaw');
+grid on;
+
+% Adjust subplot layout
+subplot(2, 1, 1);
+linkaxes;
+
+% Adjust figure properties as needed
+sgtitle('Orientation Estimates for f1 and f2 Datasets');
 
 %% uporaba Kalmanovega filtra

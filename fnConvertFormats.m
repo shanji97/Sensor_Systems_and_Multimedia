@@ -1,12 +1,11 @@
 function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaultSamplingFrequency)
    
-    gyrotable = readtable(gyroFile);
+    gyroTable = readtable(gyroFile);
     accTable = readtable(accFile);
-
-
-    %Based on the app used in the experiment, return the apropriate,
+%     %Based on the app used in the experiment, return the apropriate,
     %format.
     if strcmp(appName,'stock')
+     %TODO: change the column to "epoch".
      GYRODATA  = gyroTable;
      ACCDATA = accTable;
     elseif strcmp(appName,'phyphox')
@@ -20,29 +19,30 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
         format longG
 
         elapsed_time_s = (0:(height(accTable)-1)) / defaultSamplingFrequency;
-        data_creationTimeStamp = datetime(dir(accFile).date, 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
-        timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss.SSS');
-      
-        % Remap the data to fit "our" notation.
-        ACCDATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(dataTable), 1), elapsed_time_s', ...
-    accTable.('Acceleration x (m/s^2)') / g, accTable.('Acceleration y (m/s^2)') /g, accTable.('Acceleration z (m/s^2)') / g, ...
-    'VariableNames', {'epoc (ms)', 'timestamp (+0100)', 'elapsed (s)', 'x-axis (g)', 'y-axis (g)', 'z-axis (g)'});
+        data_creation_timestamp = datetime(dir(accFile).date, 'InputFormat', 'dd-MMM.-yyyy HH:mm:ss');
+        timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss');
+        unix_epoch_time_ms = posixtime(data_creation_timestamp) * 1000 + elapsed_time_s * 1000;
 
-       
+        % Remap the data to fit "our" notation.
+        g = 9.81;
+        ACCDATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(accTable), 1), elapsed_time_s', ...
+    accTable.('AccelerationX_m_s_2_') / g, accTable.('AccelerationY_m_s_2_') /g, accTable.('AccelerationZ_m_s_2_') / g, ...
+    'VariableNames', {'epoch', 'timestamp', 'elapsed (s)', 'x-axis (g)', 'y-axis (g)', 'z-axis (g)'});
         %% Compute the Gyroscope data
         % Essentialy the same approach, just convert rad to deg.
 
-        elapsed_time_s = (0:(height(gyrotable)-1)) / defaultSamplingFrequency;
-        data_creationTimeStamp = datetime(dir(gyroFile).date, 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
-        timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss.SSS');
+        elapsed_time_s = (0:(height(gyroTable)-1)) / defaultSamplingFrequency;
+        data_creation_timestamp = datetime(dir(gyroFile).date, 'InputFormat', 'dd-MMM.-yyyy HH:mm:ss');
+        timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss');
+        unix_epoch_time_ms = posixtime(data_creation_timestamp) * 1000 + elapsed_time_s * 1000;
 
-        gyro_x_deg_per_s = rad2deg(gyrotable.('Gyroscope x (rad/s)'));
-        gyro_y_deg_per_s = rad2deg(gyrotable.('Gyroscope y (rad/s)'));
-        gyro_z_deg_per_s = rad2deg(gyrotable.('Gyroscope z (rad/s)'));
+        gyro_x_deg_per_s = rad2deg(gyroTable.('GyroscopeX_rad_s_'));
+        gyro_y_deg_per_s = rad2deg(gyroTable.('GyroscopeY_rad_s_'));
+        gyro_z_deg_per_s = rad2deg(gyroTable.('GyroscopeZ_rad_s_'));
 
-        GYRODATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(gyroDataTable), 1), elapsed_time_s', ...
+        GYRODATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(gyroTable), 1), elapsed_time_s', ...
         gyro_x_deg_per_s, gyro_y_deg_per_s, gyro_z_deg_per_s, ...
-        'VariableNames', {'epoc (ms)', 'timestamp (+0100)', 'elapsed (s)', 'x-axis (deg/s)', 'y-axis (deg/s)', 'z-axis (deg/s)'});
+        'VariableNames', {'epoch', 'timestamp', 'elapsed (s)', 'x-axis (deg/s)', 'y-axis (deg/s)', 'z-axis (deg/s)'});
     
     end
 

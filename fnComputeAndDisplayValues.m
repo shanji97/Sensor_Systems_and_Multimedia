@@ -1,6 +1,11 @@
-function [omFin, accFin, OMFIN, ACCFIN, f] = computeAndDisplayFinValues(acc, om, fs)
+function [omFin, accFin, OMFIN, ACCFIN, f] = fnComputeAndDisplayValues(acc, om, fs)
     % Get user input for the time interval
+   
     fig = figure;
+    subplot(221), plot(acc)
+    xlabel('$n$', 'interpreter', 'latex'), ylabel('$acc\ [n]$', 'interpreter', 'latex')
+    subplot(222), plot(om)
+    xlabel('$n$', 'interpreter', 'latex'), ylabel('$\Omega\ [n]$', 'interpreter', 'latex')
     x = ginput(2);
     x = round(x);
     close(fig);
