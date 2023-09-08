@@ -1,7 +1,9 @@
 function [acc_lin, om_corrected] = fnAccFromIMU(om, acc, t, ACCDATA)
   
     
-
+    % Based on the given values, calculate the true acceleration from the
+    % given accelerations. Chose the range for which you would like to
+    % calculate 
     figure;
     plot(om);
 

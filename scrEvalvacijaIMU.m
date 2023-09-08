@@ -1,7 +1,9 @@
 %f1 = phone (Pixel 4a 5G), f2 = phone (Galaxy A53 G).
 app = 'phyphox'; % Options: "phyphox", "stock" (as by SSM meausurements).
 defaultSampling = 500; % Hz
-lambda = 0.9
+% Weighting which sensor is used more. In this case we add more weight to
+% the gyro.
+lambda = 0.98
 %Distance = 40.3cm/tile 23 tiles in one direction (one path 46 tiles  ~
 %18.538m
 accFileName_f1     = "f1_accel.csv";
@@ -148,13 +150,32 @@ g_f2 =  g0_f2/norm(g0_f2);
 [acc_lin_f2, om_corrected_f2] = fnAccFromIMU(om_f2,acc_f2,f_f2,ACCDATA_f2);
 
 %% izracun pospeskov v globalnem koordinatnem sistemu
-global_acc_f1 = accFin_1 - g_f1;
-global_acc_f2 = accFin_2 - g_f2;
+%f1
+for i = 1:length(omFilt_f1)
+    v_f1 = omFilt_f1(i,:);
+    deltaT_f1 = t_f1(i+1) - t_f1(i);
+    phi_f1 = norm(v_f1)*deltaT_f1*180/pi;
+    v_f1 = v_f1 / norm(v_f1);
+    R_f1 = fnRotacijskaMatrika(phi,v_f1);
+    accFin_f1(i+1,:) = (R_f1 * accFin_f1(i,:)')';
+end
+
+%f2
+for i = 1:length(omFilt_f2)
+    v_f2 = omFilt_f2(i,:);
+    deltaT_f2 = t_f2(i+1) - t_f2(i);
+    phi_f2 = norm(v_f2*deltaT_f1*180/pi;
+    v_f2 = v_f2 / norm(v_f2);
+    R_f2 = fnRotacijskaMatrika(phi,v_f2);
+    accFin_f2(i+1,:) = (R_f2 * accFin_f2(i,:)')';
+end
+
 %% izracun hitrosti v globalnem koordinatnem sistemu
-velocity_f1 = cumsum(global_acc_f1) * deltaT_f1; % Speed for f1
-velocity_f2 = cumsum(global_acc_f2) * deltaT_f2; % Speed for f2
+velocity_f1 = cumsum(accFin_f1) * deltaT_f1; % Speed for f1
+velocity_f2 = cumsum(accFin_f1) * deltaT_f2; % Speed for f2
 
 %% izracun poti v globalnem koordinatnem sistemu
+
 position_f1 = cumsum(velocity_f1) * deltaT_f1; % Position for f1
 position_f2 = cumsum(velocity_f2) * deltaT_f2; % Position for f2
 %% uporaba komplementarnega filtra
@@ -195,3 +216,4 @@ linkaxes;
 sgtitle('Orientation Estimates for f1 and f2 Datasets');
 
 %% uporaba Kalmanovega filtra
+

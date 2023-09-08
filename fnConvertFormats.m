@@ -1,9 +1,10 @@
 function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaultSamplingFrequency)
-   
+    %Based on the app used in the experiment, return the apropriate,
+    %format.
+
     gyroTable = readtable(gyroFile);
     accTable = readtable(accFile);
-%     %Based on the app used in the experiment, return the apropriate,
-    %format.
+
     if strcmp(appName,'stock')
      %TODO: change the column to "epoch".
      GYRODATA  = gyroTable;
@@ -18,6 +19,7 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
         % -The frequency at which the computation was made
         format longG
 
+        % For more precision, the metaData could be used.
         elapsed_time_s = (0:(height(accTable)-1)) / defaultSamplingFrequency;
         data_creation_timestamp = datetime(dir(accFile).date, 'InputFormat', 'dd-MMM.-yyyy HH:mm:ss');
         timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss');
@@ -45,6 +47,4 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
         'VariableNames', {'epoch', 'timestamp', 'elapsed (s)', 'x-axis (deg/s)', 'y-axis (deg/s)', 'z-axis (deg/s)'});
     
     end
-
-
 end
