@@ -1,5 +1,5 @@
 function g_comp = fnGComplimentaryFilter(omega, acc, g0, Ts, lambda)
-
+% Calculate the complementary filter.
 g_comp(1,:) = g0; 
 for n = 2:length(acc)
     omega_norm = sqrt(sum(omega(n,:).^2));
