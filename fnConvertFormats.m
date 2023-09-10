@@ -12,11 +12,11 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
     elseif strcmp(appName,'phyphox')
 
         %% Compute the Acceleration
-    
+        
         %Compute the epoch and the timestamp based on the:
-        % -We know the creation of the CSV file.
-        % -At which second from the start the computation was made
-        % -The frequency at which the computation was made
+        % - We know the creation of the CSV file.
+        % - At which second from the start the computation was made
+        % - The frequency at which the computation was made
         format longG
 
         % For more precision, the metaData could be used.
@@ -45,6 +45,5 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
         GYRODATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(gyroTable), 1), elapsed_time_s', ...
         gyro_x_deg_per_s, gyro_y_deg_per_s, gyro_z_deg_per_s, ...
         'VariableNames', {'epoch', 'timestamp', 'elapsed (s)', 'x-axis (deg/s)', 'y-axis (deg/s)', 'z-axis (deg/s)'});
-    
     end
 end

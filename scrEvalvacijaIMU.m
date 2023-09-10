@@ -1,8 +1,12 @@
 %f1 = phone (Pixel 4a 5G), f2 = phone (Galaxy A53 G).
 app = 'phyphox'; % Options: "phyphox", "stock" (as by SSM meausurements).
 defaultSampling = 500; % Hz
+% CutOff frequency:
+fco_f1 = 159.49 %https://www.st.com/resource/en/datasheet/lsm6dsr.pdf, p. 30 + linear interpolation
+fco_f2 = 456.67 % https://eu.mouser.com/datasheet/2/389/lsm6dso-1393615.pdf, p. 30 + linear interpolation
+
 % Weighting which sensor is used more. In this case we add more weight to
-% the gyro.
+% the gyro. Ideal 0.9 - 0.98.
 lambda = 0.98
 %Distance = 40.3cm/tile 23 tiles in one direction (one path 46 tiles  ~
 %18.538m
@@ -125,7 +129,6 @@ sgtitle('Phone2 (f2) - Accelerometer and Gyroscope');
 [omFin_f2, accFin_f2, OMFIN_f2, ACCFIN_f2, f_f2] = fnComputeAndDisplayValues(acc_f2, om_f2, fs);
 
 %% Filtering
-fco = 500;
 
 [omFilt_f1,accFilt_f1] = fnFilterData(accFin_f1,omFin_f1,fs,fco);
 [omFilt_f2,accFilt_f2] = fnFilterData(accFin_f2,omFin_f2,fs,fco);
@@ -151,36 +154,37 @@ g_f2 =  g0_f2/norm(g0_f2);
 
 %% izracun pospeskov v globalnem koordinatnem sistemu
 %f1
-for i = 1:length(omFilt_f1)
-    v_f1 = omFilt_f1(i,:);
+for i = 1:length(om_corrected_f1)
+    v_f1 = om_corrected_f1(i,:);
     deltaT_f1 = t_f1(i+1) - t_f1(i);
     phi_f1 = norm(v_f1)*deltaT_f1*180/pi;
     v_f1 = v_f1 / norm(v_f1);
     R_f1 = fnRotacijskaMatrika(phi,v_f1);
-    accFin_f1(i+1,:) = (R_f1 * accFin_f1(i,:)')';
+    acc_lin_f1(i+1,:) = (R_f1 * acc_lin_f1(i,:)')';
 end
 
 %f2
-for i = 1:length(omFilt_f2)
-    v_f2 = omFilt_f2(i,:);
+for i = 1:length(om_corrected_f2)
+    v_f2 = om_corrected_f1(i,:);
     deltaT_f2 = t_f2(i+1) - t_f2(i);
-    phi_f2 = norm(v_f2*deltaT_f1*180/pi;
+    phi_f2 = norm(v_f2)*deltaT_f2*180/pi;
     v_f2 = v_f2 / norm(v_f2);
     R_f2 = fnRotacijskaMatrika(phi,v_f2);
-    accFin_f2(i+1,:) = (R_f2 * accFin_f2(i,:)')';
+    acc_lin_f2(i+1,:) = (R_f2 * acc_lin_f2(i,:)')';
 end
 
 %% izracun hitrosti v globalnem koordinatnem sistemu
-velocity_f1 = cumsum(accFin_f1) * deltaT_f1; % Speed for f1
-velocity_f2 = cumsum(accFin_f1) * deltaT_f2; % Speed for f2
+velocity_f1 = acc_lin_f1 * deltaT_f1; % Speed for f1
+velocity_f2 = acc_lin_f2 * deltaT_f2; % Speed for f2
 
 %% izracun poti v globalnem koordinatnem sistemu
+%upoštevaj prejšnje meritve
+[position_f1,comulative_f1,leaky_f1] = fnGetPosition(velocity_f1,deltaT_f1,lambda);
+[position_f2,comulative_f2,leaky_f2] = fnGetPosition(velocity_f2,deltaT_f2,lambda);
 
-position_f1 = cumsum(velocity_f1) * deltaT_f1; % Position for f1
-position_f2 = cumsum(velocity_f2) * deltaT_f2; % Position for f2
 %% uporaba komplementarnega filtra
-g_comp_f1 = fnGComplimentaryFilter(acc_lin_f1,om_corrected_f1,g0_f1,1/defaultSampling,lambda)
-g_comp_f2 = fnGComplimentaryFilter(acc_lin_f2,om_corrected_f2,g0_f2,1/defaultSampling,lambda)
+g_comp_f1 = fnGComplimentaryFilter(acc_lin_f1,om_corrected_f1,g0_f1,1/defaultSampling,lambda);
+g_comp_f2 = fnGComplimentaryFilter(acc_lin_f2,om_corrected_f2,g0_f2,1/defaultSampling,lambda);
 
 
 % Plot the orientation estimates for f1 dataset

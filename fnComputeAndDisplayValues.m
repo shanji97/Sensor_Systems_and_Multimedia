@@ -3,9 +3,9 @@ function [omFin, accFin, OMFIN, ACCFIN, f] = fnComputeAndDisplayValues(acc, om, 
    
     fig = figure;
     subplot(221), plot(acc)
-    xlabel('$n$', 'interpreter', 'latex'), ylabel('$acc\ [n]$', 'interpreter', 'latex')
+    xlabel('$n$', 'interpreter', 'latex'), ylabel('$acc\[g]$', 'interpreter', 'latex')
     subplot(222), plot(om)
-    xlabel('$n$', 'interpreter', 'latex'), ylabel('$\Omega\ [n]$', 'interpreter', 'latex')
+    xlabel('$n$', 'interpreter', 'latex'), ylabel('$\Omega\[f]$', 'interpreter', 'latex')
     x = ginput(2);
     x = round(x);
     close(fig);
