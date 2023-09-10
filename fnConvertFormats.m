@@ -18,17 +18,21 @@ function [GYRODATA,ACCDATA] =fnConvertFormats(gyroFile, accFile, appName, defaul
         % - At which second from the start the computation was made
         % - The frequency at which the computation was made
         format longG
-
+        g = 9.81;
         % For more precision, the metaData could be used.
         elapsed_time_s = (0:(height(accTable)-1)) / defaultSamplingFrequency;
         data_creation_timestamp = datetime(dir(accFile).date, 'InputFormat', 'dd-MMM.-yyyy HH:mm:ss');
         timestamp_formatted = datestr(data_creation_timestamp, 'yyyy-MM-ddTHH.mm.ss');
         unix_epoch_time_ms = posixtime(data_creation_timestamp) * 1000 + elapsed_time_s * 1000;
 
+        %Convert to from m/s^2.
+        accX = accTable.('AccelerationX_m_s_2_') / g;
+        accY = accTable.('AccelerationY_m_s_2_') / g;
+        accZ = accTable.('AccelerationZ_m_s_2_') / g;
         % Remap the data to fit "our" notation.
-        g = 9.81;
+       
         ACCDATA = table(unix_epoch_time_ms', repmat({timestamp_formatted}, height(accTable), 1), elapsed_time_s', ...
-    accTable.('AccelerationX_m_s_2_') / g, accTable.('AccelerationY_m_s_2_') /g, accTable.('AccelerationZ_m_s_2_') / g, ...
+    accX, accY, accZ, ...
     'VariableNames', {'epoch', 'timestamp', 'elapsed (s)', 'x-axis (g)', 'y-axis (g)', 'z-axis (g)'});
         %% Compute the Gyroscope data
         % Essentialy the same approach, just convert rad to deg.

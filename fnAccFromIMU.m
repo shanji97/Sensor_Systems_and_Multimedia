@@ -1,9 +1,5 @@
-function [acc_lin, om_corrected] = fnAccFromIMU(om, acc, t, ACCDATA)
-    % Check array lengths
-    disp(['Length of om: ' num2str(length(om))]);   
-    disp(['Length of acc: ' num2str(length(acc))]);
-    disp(['Length of t: ' num2str(length(t))]);
-    
+function [acc_lin, om_corrected] = fnAccFromIMU(om, acc, t)
+    % Check array lengths    
     % Based on the given values, calculate the true acceleration from the
     % given accelerations. Chose the range for which you would like to
     % calculate 
@@ -28,9 +24,7 @@ function [acc_lin, om_corrected] = fnAccFromIMU(om, acc, t, ACCDATA)
     acc_corrected = acc - acc_0;
 
     g_sens = acc_0 / norm(acc_0);
-       
-    
-    t = interp1(ACCDATA.epoch, t, linspace(ACCDATA.epoch(1), ACCDATA.epoch(end), length(om)), 'linear');
+      
     % Limit the loop to prevent index exceeding error
     for i = 1:length(om) - 1
         v = om(i,:);
